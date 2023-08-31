@@ -1,4 +1,4 @@
-# SoroSplit Contract
+# SoroSplit Contracts
 
 SoroSplits is a set of smart contracts & interfaces to enable split transactions and revenue sharing across multiple parties in the Stellar ecosystem. 
 
