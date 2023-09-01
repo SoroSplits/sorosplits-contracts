@@ -1,4 +1,4 @@
-use soroban_sdk::{contract, contractimpl, Env, Vec, Address};
+use soroban_sdk::{contract, contractimpl, Address, Env, Vec};
 
 use crate::storage::{DataKey, ShareDataKey};
 
