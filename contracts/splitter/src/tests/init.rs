@@ -4,8 +4,8 @@ use crate::{storage::ShareDataKey, tests::helpers::create_splitter};
 
 #[test]
 fn happy_path() {
-    let env = Env::default();
-    let splitter = create_splitter(&env);
+    let env: Env = Env::default();
+    let (splitter, _) = create_splitter(&env);
 
     let shares = vec![
         &env,

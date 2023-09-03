@@ -6,19 +6,22 @@ use crate::{
     storage::ShareDataKey,
 };
 
-pub fn create_splitter(e: &Env) -> SplitterClient {
-    SplitterClient::new(&e, &e.register_contract(None, Splitter))
+pub fn create_splitter(e: &Env) -> (SplitterClient, Address) {
+    let contract_id = &e.register_contract(None, Splitter);
+    (SplitterClient::new(&e, contract_id), contract_id.clone())
 }
 
-pub fn create_splitter_with_shares(e: &Env, shares: &Vec<ShareDataKey>) {
-    let client = create_splitter(e);
-    client.init(shares)
+pub fn create_splitter_with_shares<'a>(e: &Env, shares: &Vec<ShareDataKey>) -> (SplitterClient<'a>, Address) {
+    let (client, contract_id) = create_splitter(e);
+    client.init(shares);
+    (client, contract_id)
 }
 
-pub fn create_token<'a>(e: &Env, admin: &Address) -> (TokenClient<'a>, TokenAdminClient<'a>) {
+pub fn create_token<'a>(e: &Env, admin: &Address) -> (TokenClient<'a>, TokenAdminClient<'a>, Address) {
     let contract_id = e.register_stellar_asset_contract(admin.clone());
     (
         TokenClient::new(e, &contract_id),
         TokenAdminClient::new(e, &contract_id),
+        contract_id
     )
 }
