@@ -1,4 +1,4 @@
-use fixed_point_math::{FixedPoint, STROOP};
+use fixed_point_math::FixedPoint;
 use soroban_sdk::{contract, contractimpl, token, Address, Env, Vec};
 
 use crate::storage::{DataKey, ShareDataKey};
@@ -56,7 +56,7 @@ impl SplitterTrait for Splitter {
                 .unwrap_or(0);
 
             // Calculate the amount of tokens to distribute
-            let amount = balance.fixed_mul_floor(share, STROOP.into()).unwrap_or(0);
+            let amount = balance.fixed_mul_floor(share, 10000).unwrap_or(0);
 
             // Transfer the tokens to the shareholder
             token.transfer(&env.current_contract_address(), &shareholder, &amount);
