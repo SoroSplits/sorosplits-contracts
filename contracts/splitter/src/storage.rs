@@ -4,7 +4,7 @@ use soroban_sdk::{contracttype, Address};
 #[contracttype]
 pub struct ShareDataKey {
     pub shareholder: Address,
-    pub share: u64,
+    pub share: i128,
 }
 
 #[derive(Clone)]
