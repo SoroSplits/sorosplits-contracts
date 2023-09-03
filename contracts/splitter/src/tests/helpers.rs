@@ -11,17 +11,23 @@ pub fn create_splitter(e: &Env) -> (SplitterClient, Address) {
     (SplitterClient::new(&e, contract_id), contract_id.clone())
 }
 
-pub fn create_splitter_with_shares<'a>(e: &Env, shares: &Vec<ShareDataKey>) -> (SplitterClient<'a>, Address) {
+pub fn create_splitter_with_shares<'a>(
+    e: &'a Env,
+    shares: &Vec<ShareDataKey>,
+) -> (SplitterClient<'a>, Address) {
     let (client, contract_id) = create_splitter(e);
     client.init(shares);
     (client, contract_id)
 }
 
-pub fn create_token<'a>(e: &Env, admin: &Address) -> (TokenClient<'a>, TokenAdminClient<'a>, Address) {
+pub fn create_token<'a>(
+    e: &Env,
+    admin: &Address,
+) -> (TokenClient<'a>, TokenAdminClient<'a>, Address) {
     let contract_id = e.register_stellar_asset_contract(admin.clone());
     (
         TokenClient::new(e, &contract_id),
         TokenAdminClient::new(e, &contract_id),
-        contract_id
+        contract_id,
     )
 }
