@@ -3,6 +3,8 @@ use soroban_sdk::{contract, contractimpl, token, Address, Env, Vec};
 
 use crate::storage::{DataKey, ShareDataKey};
 
+// TODO: Add contract metadata here
+
 pub trait SplitterTrait {
     fn init(env: Env, shares: Vec<ShareDataKey>);
 
@@ -18,6 +20,9 @@ impl SplitterTrait for Splitter {
         // Shareholders are stored in a vector
         let mut shareholders: Vec<Address> = Vec::new(&env);
 
+        // TODO: Check if the shares sum up to 10000
+        // return an error if it doesn't
+        
         for share in shares.iter() {
             // Add the shareholder to the vector
             shareholders.push_back(share.shareholder.clone());
@@ -35,6 +40,8 @@ impl SplitterTrait for Splitter {
     }
 
     fn distribute_tokens(env: Env, token_address: Address) {
+        // TODO: Add admin check for unathorized access
+
         let token = token::Client::new(&env, &token_address);
 
         // Get the available token balance
@@ -62,4 +69,14 @@ impl SplitterTrait for Splitter {
             token.transfer(&env.current_contract_address(), &shareholder, &amount);
         }
     }
+
+    // TODO: Add a function to change the shareholders and their shares
+    // Only admin can call this function
+
+    // TODO: Add a function to lock the contract
+    // Only admin can call this function
+
+    // TODO: Add a function to query the shares
+
+    // TODO: Add a function to query the contract configuration
 }

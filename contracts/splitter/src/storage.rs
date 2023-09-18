@@ -7,6 +7,11 @@ pub struct ShareDataKey {
     pub share: i128,
 }
 
+// TODO: Implement helper methods on ShareDataKey
+
+// TODO: Add data key for contract configuration
+// TODO: Implement helper methods
+
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
