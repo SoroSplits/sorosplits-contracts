@@ -41,16 +41,13 @@ impl ShareDataKey {
 #[contracttype]
 pub struct ConfigDataKey {
     admin: Address,
-    mutable: bool
+    mutable: bool,
 }
 impl ConfigDataKey {
     /// Initializes the config with the given admin address and mutable flag
     pub fn init(e: &Env, admin: Address, mutable: bool) {
         let key = DataKey::Config;
-        let config = ConfigDataKey {
-            admin,
-            mutable,
-        };
+        let config = ConfigDataKey { admin, mutable };
         e.storage().instance().set(&key, &config);
     }
 
@@ -68,7 +65,7 @@ impl ConfigDataKey {
             Some(mut config) => {
                 config.mutable = false;
                 e.storage().instance().set(&key, &config);
-            },
+            }
             None => (),
         }
     }

@@ -1,5 +1,5 @@
 use soroban_sdk::{token, Address, Env, Vec};
-use token::{StellarAssetClient as TokenAdminClient, Client as TokenClient};
+use token::{Client as TokenClient, StellarAssetClient as TokenAdminClient};
 
 use crate::{
     contract::{Splitter, SplitterClient},
