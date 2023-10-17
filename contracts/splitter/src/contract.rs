@@ -29,6 +29,10 @@ pub struct Splitter;
 #[contractimpl]
 impl SplitterTrait for Splitter {
     fn init(env: Env, admin: Address, shares: Vec<ShareDataKey>) -> Result<(), Error> {
+        if ConfigDataKey::exists(&env) {
+            return Err(Error::AlreadyInitialized);
+        };
+
         // Initialize the contract configuration
         ConfigDataKey::init(&env, admin, true);
 
@@ -53,6 +57,10 @@ impl SplitterTrait for Splitter {
     }
 
     fn distribute_tokens(env: Env, token_address: Address) -> Result<(), Error> {
+        if !ConfigDataKey::exists(&env) {
+            return Err(Error::NotInitialized);
+        };
+
         // TODO: Add admin check for unathorized access
 
         let token = token::Client::new(&env, &token_address);

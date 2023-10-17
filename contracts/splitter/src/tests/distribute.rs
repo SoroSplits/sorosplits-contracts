@@ -1,8 +1,9 @@
 use soroban_sdk::{testutils::Address as _, vec, Address, Env};
 
 use crate::{
+    errors::Error,
     storage::ShareDataKey,
-    tests::helpers::{create_splitter_with_shares, create_token},
+    tests::helpers::{create_splitter, create_splitter_with_shares, create_token},
 };
 
 #[test]
@@ -39,4 +40,15 @@ fn happy_path() {
 
     assert_eq!(token.balance(&shareholder_1), 805_000_000);
     assert_eq!(token.balance(&shareholder_2), 195_000_000);
+}
+
+#[test]
+fn test_not_initialized() {
+    let env = Env::default();
+    let (splitter, _) = create_splitter(&env);
+
+    assert_eq!(
+        splitter.try_distribute_tokens(&Address::random(&env)),
+        Err(Ok(Error::NotInitialized))
+    );
 }
