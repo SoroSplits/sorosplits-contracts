@@ -1,11 +1,11 @@
 use fixed_point_math::FixedPoint;
-use soroban_sdk::{contract, contractimpl, token, Address, Env, Vec, contractmeta};
+use soroban_sdk::{contract, contractimpl, contractmeta, token, Address, Env, Vec};
 
-use crate::storage::{DataKey, ShareDataKey};
+use crate::storage::ShareDataKey;
 
 contractmeta!(
-    key="desc",
-    val="Splitter contract is used to distribute tokens to shareholders with predefined shares."
+    key = "desc",
+    val = "Splitter contract is used to distribute tokens to shareholders with predefined shares."
 );
 
 pub trait SplitterTrait {
@@ -31,21 +31,17 @@ impl SplitterTrait for Splitter {
 
         // TODO: Check if the shares sum up to 10000
         // return an error if it doesn't
-        
+
         for share in shares.iter() {
             // Add the shareholder to the vector
             shareholders.push_back(share.shareholder.clone());
 
             // Store the share for each shareholder
-            env.storage()
-                .persistent()
-                .set(&DataKey::Share(share.shareholder), &share.share);
+            ShareDataKey::save_share(&env, share.shareholder, share.share);
         }
 
         // Store the shareholders vector
-        env.storage()
-            .persistent()
-            .set(&DataKey::Shareholders, &shareholders);
+        ShareDataKey::save_shareholders(&env, shareholders);
     }
 
     fn distribute_tokens(env: Env, token_address: Address) {
@@ -57,25 +53,19 @@ impl SplitterTrait for Splitter {
         let balance = token.balance(&env.current_contract_address());
 
         // Get the shareholders vector
-        let shareholders = env
-            .storage()
-            .persistent()
-            .get::<DataKey, Vec<Address>>(&DataKey::Shareholders)
-            .unwrap_or(Vec::new(&env));
+        let shareholders = ShareDataKey::get_shareholders(&env);
 
         // For each shareholder, calculate the amount of tokens to distribute
         for shareholder in shareholders.iter() {
-            let share = env
-                .storage()
-                .persistent()
-                .get::<DataKey, i128>(&DataKey::Share(shareholder.clone()))
-                .unwrap_or(0);
+            if let Some(ShareDataKey { share, .. }) = ShareDataKey::get_share(&env, &shareholder) {
+                // Calculate the amount of tokens to distribute
+                let amount = balance.fixed_mul_floor(share, 10000).unwrap_or(0);
 
-            // Calculate the amount of tokens to distribute
-            let amount = balance.fixed_mul_floor(share, 10000).unwrap_or(0);
-
-            // Transfer the tokens to the shareholder
-            token.transfer(&env.current_contract_address(), &shareholder, &amount);
+                if amount > 0 {
+                    // Transfer the tokens to the shareholder
+                    token.transfer(&env.current_contract_address(), &shareholder, &amount);
+                }
+            };
         }
     }
 
