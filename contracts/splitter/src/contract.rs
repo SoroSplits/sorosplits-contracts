@@ -1,9 +1,12 @@
 use fixed_point_math::FixedPoint;
-use soroban_sdk::{contract, contractimpl, token, Address, Env, Vec};
+use soroban_sdk::{contract, contractimpl, token, Address, Env, Vec, contractmeta};
 
 use crate::storage::{DataKey, ShareDataKey};
 
-// TODO: Add contract metadata here
+contractmeta!(
+    key="desc",
+    val="Splitter contract is used to distribute tokens to shareholders with predefined shares."
+);
 
 pub trait SplitterTrait {
     fn init(env: Env, shares: Vec<ShareDataKey>);
