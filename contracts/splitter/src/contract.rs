@@ -12,6 +12,12 @@ pub trait SplitterTrait {
     fn init(env: Env, shares: Vec<ShareDataKey>);
 
     fn distribute_tokens(env: Env, token_address: Address);
+
+    fn update_shares(env: Env, shares: Vec<ShareDataKey>);
+
+    fn lock_contract(env: Env);
+
+    fn get_shares(env: Env) -> Vec<ShareDataKey>;
 }
 
 #[contract]
@@ -73,13 +79,17 @@ impl SplitterTrait for Splitter {
         }
     }
 
-    // TODO: Add a function to change the shareholders and their shares
-    // Only admin can call this function
+    fn update_shares(_env: Env, _shares: Vec<ShareDataKey>) {
+        unimplemented!();
+    }
 
-    // TODO: Add a function to lock the contract
-    // Only admin can call this function
+    fn lock_contract(_env: Env) {
+        unimplemented!();
+    }
 
-    // TODO: Add a function to query the shares
+    fn get_shares(_env: Env) -> Vec<ShareDataKey> {
+        unimplemented!();
+    }
 
     // TODO: Add a function to query the contract configuration
 }
