@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address, Env};
+use soroban_sdk::{contracttype, Address, Env, Vec};
 
 #[derive(Clone, Debug, PartialEq)]
 #[contracttype]
@@ -7,16 +7,33 @@ pub struct ShareDataKey {
     pub share: i128,
 }
 impl ShareDataKey {
-    pub fn save(e: &Env, shareholder: Address, share: i128) {
+    /// Initializes the share for the shareholder
+    pub fn save_share(e: &Env, shareholder: Address, share: i128) {
         let key = DataKey::Share(shareholder.clone());
         e.storage()
             .persistent()
             .set(&key, &ShareDataKey { shareholder, share });
     }
 
-    pub fn get(e: &Env, shareholder: &Address) -> Option<ShareDataKey> {
+    /// Returns the share for the shareholder
+    pub fn get_share(e: &Env, shareholder: &Address) -> Option<ShareDataKey> {
         let key = DataKey::Share(shareholder.clone());
         e.storage().persistent().get(&key)
+    }
+
+    /// Saves the list of shareholders
+    pub fn save_shareholders(e: &Env, shareholders: Vec<Address>) {
+        e.storage()
+            .persistent()
+            .set(&DataKey::Shareholders, &shareholders);
+    }
+
+    /// Returns the list of shareholders
+    pub fn get_shareholders(e: &Env) -> Vec<Address> {
+        e.storage()
+            .persistent()
+            .get::<DataKey, Vec<Address>>(&DataKey::Shareholders)
+            .unwrap_or(Vec::new(&e))
     }
 }
 
