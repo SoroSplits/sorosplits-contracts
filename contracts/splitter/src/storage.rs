@@ -6,6 +6,19 @@ pub struct ShareDataKey {
     pub shareholder: Address,
     pub share: i128,
 }
+impl ShareDataKey {
+    pub fn save(e: &Env, shareholder: Address, share: i128) {
+        let key = DataKey::Share(shareholder.clone());
+        e.storage()
+            .persistent()
+            .set(&key, &ShareDataKey { shareholder, share });
+    }
+
+    pub fn get(e: &Env, shareholder: &Address) -> Option<ShareDataKey> {
+        let key = DataKey::Share(shareholder.clone());
+        e.storage().persistent().get(&key)
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 #[contracttype]
