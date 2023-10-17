@@ -1,7 +1,10 @@
 use fixed_point_math::FixedPoint;
 use soroban_sdk::{contract, contractimpl, contractmeta, token, Address, Env, Vec};
 
-use crate::storage::ShareDataKey;
+use crate::{
+    errors::Error,
+    storage::{ConfigDataKey, ShareDataKey},
+};
 
 contractmeta!(
     key = "desc",
@@ -9,9 +12,9 @@ contractmeta!(
 );
 
 pub trait SplitterTrait {
-    fn init(env: Env, shares: Vec<ShareDataKey>);
+    fn init(env: Env, admin: Address, shares: Vec<ShareDataKey>) -> Result<(), Error>;
 
-    fn distribute_tokens(env: Env, token_address: Address);
+    fn distribute_tokens(env: Env, token_address: Address) -> Result<(), Error>;
 
     fn update_shares(env: Env, shares: Vec<ShareDataKey>);
 
@@ -25,7 +28,10 @@ pub struct Splitter;
 
 #[contractimpl]
 impl SplitterTrait for Splitter {
-    fn init(env: Env, shares: Vec<ShareDataKey>) {
+    fn init(env: Env, admin: Address, shares: Vec<ShareDataKey>) -> Result<(), Error> {
+        // Initialize the contract configuration
+        ConfigDataKey::init(&env, admin, true);
+
         // Shareholders are stored in a vector
         let mut shareholders: Vec<Address> = Vec::new(&env);
 
@@ -42,9 +48,11 @@ impl SplitterTrait for Splitter {
 
         // Store the shareholders vector
         ShareDataKey::save_shareholders(&env, shareholders);
+
+        Ok(())
     }
 
-    fn distribute_tokens(env: Env, token_address: Address) {
+    fn distribute_tokens(env: Env, token_address: Address) -> Result<(), Error> {
         // TODO: Add admin check for unathorized access
 
         let token = token::Client::new(&env, &token_address);
@@ -67,6 +75,8 @@ impl SplitterTrait for Splitter {
                 }
             };
         }
+
+        Ok(())
     }
 
     fn update_shares(_env: Env, _shares: Vec<ShareDataKey>) {

@@ -13,10 +13,11 @@ pub fn create_splitter(e: &Env) -> (SplitterClient, Address) {
 
 pub fn create_splitter_with_shares<'a>(
     e: &'a Env,
+    admin: &Address,
     shares: &Vec<ShareDataKey>,
 ) -> (SplitterClient<'a>, Address) {
     let (client, contract_id) = create_splitter(e);
-    client.init(shares);
+    client.init(admin, shares);
     (client, contract_id)
 }
 

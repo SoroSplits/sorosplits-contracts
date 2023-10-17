@@ -7,6 +7,7 @@ fn happy_path() {
     let env: Env = Env::default();
     let (splitter, _) = create_splitter(&env);
 
+    let admin = Address::random(&env);
     let shares = vec![
         &env,
         ShareDataKey {
@@ -19,5 +20,5 @@ fn happy_path() {
         },
     ];
 
-    splitter.init(&shares)
+    assert_eq!(splitter.try_init(&admin, &shares), Ok(Ok(())))
 }
