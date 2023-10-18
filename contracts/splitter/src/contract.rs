@@ -20,7 +20,7 @@ pub trait SplitterTrait {
 
     fn lock_contract(env: Env) -> Result<(), Error>;
 
-    fn get_shares(env: Env) -> Vec<ShareDataKey>;
+    fn get_share(env: Env, shareholder: Address) -> Result<Option<i128>, Error>;
 
     fn get_config(env: Env) -> Result<ConfigDataKey, Error>;
 }
@@ -111,8 +111,14 @@ impl SplitterTrait for Splitter {
         Ok(())
     }
 
-    fn get_shares(_env: Env) -> Vec<ShareDataKey> {
-        unimplemented!();
+    fn get_share(env: Env, shareholder: Address) -> Result<Option<i128>, Error> {
+        if !ConfigDataKey::exists(&env) {
+            return Err(Error::NotInitialized);
+        };
+        match ShareDataKey::get_share(&env, &shareholder) {
+            Some(share) => Ok(Some(share.share)),
+            None => Ok(None),
+        }
     }
 
     fn get_config(env: Env) -> Result<ConfigDataKey, Error> {

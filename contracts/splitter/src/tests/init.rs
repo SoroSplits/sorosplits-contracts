@@ -8,19 +8,24 @@ fn happy_path() {
     let (splitter, _) = create_splitter(&env);
 
     let admin = Address::random(&env);
+    let shareholder_1 = Address::random(&env);
+    let shareholder_2 = Address::random(&env);
     let shares = vec![
         &env,
         ShareDataKey {
-            shareholder: Address::random(&env),
+            shareholder: shareholder_1.clone(),
             share: 8050,
         },
         ShareDataKey {
-            shareholder: Address::random(&env),
+            shareholder: shareholder_2.clone(),
             share: 1950,
         },
     ];
 
     splitter.init(&admin, &shares);
+
+    assert_eq!(splitter.get_share(&shareholder_1), Some(8050));
+    assert_eq!(splitter.get_share(&shareholder_2), Some(1950));
 }
 
 #[test]
