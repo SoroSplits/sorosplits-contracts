@@ -41,7 +41,7 @@ pub trait SplitterTrait {
     /// ## Arguments
     ///
     /// * `shares` - The updated shareholders with their shares
-    fn update_shares(env: Env, shares: Vec<ShareDataKey>);
+    fn update_shares(env: Env, shares: Vec<ShareDataKey>) -> Result<(), Error>;
 
     /// Locks the contract for further shares updates.
     ///
@@ -91,22 +91,8 @@ impl SplitterTrait for Splitter {
         // Check if the shares sum up to 10000
         check_shares(&shares)?;
 
-        // Shareholders are stored in a vector
-        let mut shareholders: Vec<Address> = Vec::new(&env);
-
-        // TODO: Check if the shares sum up to 10000
-        // return an error if it doesn't
-
-        for share in shares.iter() {
-            // Add the shareholder to the vector
-            shareholders.push_back(share.shareholder.clone());
-
-            // Store the share for each shareholder
-            ShareDataKey::save_share(&env, share.shareholder, share.share);
-        }
-
-        // Store the shareholders vector
-        ShareDataKey::save_shareholders(&env, shareholders);
+        // Update the shares of the shareholders
+        update_shares(&env, &shares);
 
         Ok(())
     }
@@ -143,8 +129,24 @@ impl SplitterTrait for Splitter {
         Ok(())
     }
 
-    fn update_shares(_env: Env, _shares: Vec<ShareDataKey>) {
-        unimplemented!();
+    fn update_shares(env: Env, shares: Vec<ShareDataKey>) -> Result<(), Error> {
+        if !ConfigDataKey::exists(&env) {
+            return Err(Error::NotInitialized);
+        };
+
+        // Make sure the caller is the admin
+        ConfigDataKey::require_admin(&env)?;
+
+        // Check if the shares sum up to 10000
+        check_shares(&shares)?;
+
+        // Remove all of the shareholders and their shares
+        reset_shares(&env);
+
+        // Update the shares of the shareholders
+        update_shares(&env, &shares);
+
+        Ok(())
     }
 
     fn lock_contract(env: Env) -> Result<(), Error> {
@@ -192,6 +194,31 @@ impl SplitterTrait for Splitter {
         };
         Ok(ConfigDataKey::get(&env).unwrap())
     }
+}
+
+/// Updates the shares of the shareholders
+fn update_shares(env: &Env, shares: &Vec<ShareDataKey>) {
+    // Shareholders are stored in a vector
+    let mut shareholders: Vec<Address> = Vec::new(&env);
+
+    for share in shares.iter() {
+        // Add the shareholder to the vector
+        shareholders.push_back(share.shareholder.clone());
+
+        // Store the share for each shareholder
+        ShareDataKey::save_share(&env, share.shareholder, share.share);
+    }
+
+    // Store the shareholders vector
+    ShareDataKey::save_shareholders(&env, shareholders);
+}
+
+/// Removes all of the shareholders and their shares
+fn reset_shares(env: &Env) {
+    for shareholder in ShareDataKey::get_shareholders(env).iter() {
+        ShareDataKey::remove_share(env, &shareholder);
+    }
+    ShareDataKey::remove_shareholders(env);
 }
 
 /// Checks if the shares sum up to 10000

@@ -23,6 +23,12 @@ impl ShareDataKey {
         e.storage().persistent().get(&key)
     }
 
+    /// Removes the share for the shareholder
+    pub fn remove_share(e: &Env, shareholder: &Address) {
+        let key = DataKey::Share(shareholder.clone());
+        e.storage().persistent().remove(&key);
+    }
+
     /// Saves the list of shareholders
     pub fn save_shareholders(e: &Env, shareholders: Vec<Address>) {
         e.storage()
@@ -36,6 +42,11 @@ impl ShareDataKey {
             .persistent()
             .get::<DataKey, Vec<Address>>(&DataKey::Shareholders)
             .unwrap_or(Vec::new(&e))
+    }
+
+    /// Removes the list of shareholders
+    pub fn remove_shareholders(e: &Env) {
+        e.storage().persistent().remove(&DataKey::Shareholders);
     }
 }
 
