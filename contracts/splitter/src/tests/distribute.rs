@@ -52,3 +52,14 @@ fn test_not_initialized() {
         Err(Ok(Error::NotInitialized))
     );
 }
+
+#[test]
+fn test_unauthorized() {
+    let env = Env::default();
+    let (splitter, _) = create_splitter(&env);
+
+    let token_admin = Address::random(&env);
+    let (_, _, token_address) = create_token(&env, &token_admin);
+
+    assert!(splitter.try_distribute_tokens(&token_address).is_err());
+}

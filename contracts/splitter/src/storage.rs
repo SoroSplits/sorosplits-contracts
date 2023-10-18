@@ -1,5 +1,7 @@
 use soroban_sdk::{contracttype, Address, Env, Vec};
 
+use crate::errors::Error;
+
 #[derive(Clone, Debug, PartialEq)]
 #[contracttype]
 pub struct ShareDataKey {
@@ -76,15 +78,12 @@ impl ConfigDataKey {
         e.storage().instance().has(&key)
     }
 
-    /// Returns true if the address is admin
-    // TODO: Maybe return an error if ConfigDataKey doesn't exist
-    pub fn is_address_admin(e: &Env, address: Address) -> bool {
+    /// Validates the admin address
+    pub fn require_admin(e: &Env) -> Result<(), Error> {
         let key = DataKey::Config;
-        let config: Option<ConfigDataKey> = e.storage().instance().get(&key);
-        match config {
-            Some(config) => config.admin == address,
-            None => false,
-        }
+        let config: ConfigDataKey = e.storage().instance().get(&key).unwrap();
+        config.admin.require_auth();
+        Ok(())
     }
 
     /// Returns true if the contract is mutable
