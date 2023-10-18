@@ -9,6 +9,5 @@ pub enum Error {
     Unauthorized = 3,
     ContractLocked = 4,
     LowShareCount = 5,
-    ShareLimitReached = 6,
-    ShareLimitNotReached = 7,
+    InvalidShareTotal = 6,
 }

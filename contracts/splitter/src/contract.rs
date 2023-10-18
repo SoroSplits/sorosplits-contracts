@@ -38,6 +38,9 @@ impl SplitterTrait for Splitter {
         // Initialize the contract configuration
         ConfigDataKey::init(&env, admin, true);
 
+        // Check if the shares sum up to 10000
+        check_shares(&shares)?;
+
         // Shareholders are stored in a vector
         let mut shareholders: Vec<Address> = Vec::new(&env);
 
@@ -118,4 +121,19 @@ impl SplitterTrait for Splitter {
         };
         Ok(ConfigDataKey::get(&env).unwrap())
     }
+}
+
+/// Checks if the shares sum up to 10000
+fn check_shares(shares: &Vec<ShareDataKey>) -> Result<(), Error> {
+    if shares.len() == 1 {
+        return Err(Error::LowShareCount);
+    };
+
+    let total = shares.iter().fold(0, |acc, share| acc + share.share);
+
+    if total != 10000 {
+        return Err(Error::InvalidShareTotal);
+    };
+
+    Ok(())
 }
