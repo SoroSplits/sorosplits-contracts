@@ -22,6 +22,8 @@ pub trait SplitterTrait {
 
     fn get_share(env: Env, shareholder: Address) -> Result<Option<i128>, Error>;
 
+    fn list_shares(env: Env) -> Result<Vec<ShareDataKey>, Error>;
+
     fn get_config(env: Env) -> Result<ConfigDataKey, Error>;
 }
 
@@ -119,6 +121,21 @@ impl SplitterTrait for Splitter {
             Some(share) => Ok(Some(share.share)),
             None => Ok(None),
         }
+    }
+
+    fn list_shares(env: Env) -> Result<Vec<ShareDataKey>, Error> {
+        if !ConfigDataKey::exists(&env) {
+            return Err(Error::NotInitialized);
+        };
+
+        let mut shares: Vec<ShareDataKey> = Vec::new(&env);
+
+        for shareholder in ShareDataKey::get_shareholders(&env).iter() {
+            let share = ShareDataKey::get_share(&env, &shareholder).unwrap();
+            shares.push_back(share);
+        }
+
+        Ok(shares)
     }
 
     fn get_config(env: Env) -> Result<ConfigDataKey, Error> {

@@ -26,6 +26,7 @@ fn happy_path() {
 
     assert_eq!(splitter.get_share(&shareholder_1), Some(8050));
     assert_eq!(splitter.get_share(&shareholder_2), Some(1950));
+    assert_eq!(splitter.list_shares(), shares);
 }
 
 #[test]
