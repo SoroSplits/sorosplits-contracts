@@ -36,7 +36,7 @@ fn happy_path() {
 
     sudo_token.mint(&splitter_address, &1_000_000_000);
 
-    assert_eq!(splitter.try_distribute_tokens(&token_address), Ok(Ok(())));
+    splitter.distribute_tokens(&token_address);
 
     assert_eq!(token.balance(&shareholder_1), 805_000_000);
     assert_eq!(token.balance(&shareholder_2), 195_000_000);

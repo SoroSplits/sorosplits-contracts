@@ -18,9 +18,11 @@ pub trait SplitterTrait {
 
     fn update_shares(env: Env, shares: Vec<ShareDataKey>);
 
-    fn lock_contract(env: Env);
+    fn lock_contract(env: Env) -> Result<(), Error>;
 
     fn get_shares(env: Env) -> Vec<ShareDataKey>;
+
+    fn get_config(env: Env) -> Result<ConfigDataKey, Error>;
 }
 
 #[contract]
@@ -91,13 +93,29 @@ impl SplitterTrait for Splitter {
         unimplemented!();
     }
 
-    fn lock_contract(_env: Env) {
-        unimplemented!();
+    fn lock_contract(env: Env) -> Result<(), Error> {
+        if !ConfigDataKey::exists(&env) {
+            return Err(Error::NotInitialized);
+        };
+
+        // Make sure the sender is the admin
+        let admin = ConfigDataKey::get(&env).unwrap().admin;
+        admin.require_auth();
+
+        // Update the contract configuration
+        ConfigDataKey::lock_contract(&env);
+
+        Ok(())
     }
 
     fn get_shares(_env: Env) -> Vec<ShareDataKey> {
         unimplemented!();
     }
 
-    // TODO: Add a function to query the contract configuration
+    fn get_config(env: Env) -> Result<ConfigDataKey, Error> {
+        if !ConfigDataKey::exists(&env) {
+            return Err(Error::NotInitialized);
+        };
+        Ok(ConfigDataKey::get(&env).unwrap())
+    }
 }

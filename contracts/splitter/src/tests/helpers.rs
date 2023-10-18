@@ -1,4 +1,4 @@
-use soroban_sdk::{token, Address, Env, Vec};
+use soroban_sdk::{testutils::Address as _, token, vec, Address, Env, Vec};
 use token::{Client as TokenClient, StellarAssetClient as TokenAdminClient};
 
 use crate::{
@@ -18,6 +18,28 @@ pub fn create_splitter_with_shares<'a>(
 ) -> (SplitterClient<'a>, Address) {
     let (client, contract_id) = create_splitter(e);
     client.init(admin, shares);
+    (client, contract_id)
+}
+
+pub fn create_splitter_with_default_shares<'a>(
+    e: &'a Env,
+    admin: &Address,
+) -> (SplitterClient<'a>, Address) {
+    let (client, contract_id) = create_splitter_with_shares(
+        e,
+        admin,
+        &vec![
+            &e,
+            ShareDataKey {
+                shareholder: Address::random(&e),
+                share: 8050,
+            },
+            ShareDataKey {
+                shareholder: Address::random(&e),
+                share: 1950,
+            },
+        ],
+    );
     (client, contract_id)
 }
 

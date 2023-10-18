@@ -40,8 +40,8 @@ impl ShareDataKey {
 #[derive(Clone, Debug, PartialEq)]
 #[contracttype]
 pub struct ConfigDataKey {
-    admin: Address,
-    mutable: bool,
+    pub admin: Address,
+    pub mutable: bool,
 }
 impl ConfigDataKey {
     /// Initializes the config with the given admin address and mutable flag

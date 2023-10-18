@@ -20,7 +20,7 @@ fn happy_path() {
         },
     ];
 
-    assert_eq!(splitter.try_init(&admin, &shares), Ok(Ok(())))
+    splitter.init(&admin, &shares);
 }
 
 #[test]
