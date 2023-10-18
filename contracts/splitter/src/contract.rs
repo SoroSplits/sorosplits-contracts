@@ -12,18 +12,67 @@ contractmeta!(
 );
 
 pub trait SplitterTrait {
+    /// Initializes the contract with the admin and the shareholders
+    /// 
+    /// This method can only be called once.
+    /// Runs the `check_shares` function to make sure the shares sum up to 10000.
+    /// 
+    /// ## Arguments
+    /// 
+    /// * `admin` - The admin address for the contract
+    /// * `shares` - The shareholders with their shares
     fn init(env: Env, admin: Address, shares: Vec<ShareDataKey>) -> Result<(), Error>;
 
+    /// Distributes tokens to the shareholders.
+    /// 
+    /// Anyone can call this function.
+    /// All of the available token balance is distributed on execution.
+    /// 
+    /// ## Arguments
+    /// 
+    /// * `token_address` - The address of the token to distribute
     fn distribute_tokens(env: Env, token_address: Address) -> Result<(), Error>;
 
+    
+    /// Updates the shares of the shareholders.
+    /// 
+    /// Can only be called by the admin.
+    /// All of the shares and shareholders are updated on execution.
+    /// 
+    /// ## Arguments
+    /// 
+    /// * `shares` - The updated shareholders with their shares
     fn update_shares(env: Env, shares: Vec<ShareDataKey>);
 
+    /// Locks the contract for further shares updates.
+    /// 
+    /// Can only be called by the admin.
+    /// Locking the contract does not affect the distribution of tokens.
     fn lock_contract(env: Env) -> Result<(), Error>;
 
+    /// Gets the share of a shareholder.
+    /// 
+    /// ## Arguments
+    /// 
+    /// * `shareholder` - The address of the shareholder
+    /// 
+    /// ## Returns
+    /// 
+    /// * `Option<i128>` - The share of the shareholder if it exists
     fn get_share(env: Env, shareholder: Address) -> Result<Option<i128>, Error>;
 
+    /// Lists all of the shareholders with their shares.
+    /// 
+    /// ## Returns
+    /// 
+    /// * `Vec<ShareDataKey>` - The list of shareholders with their shares
     fn list_shares(env: Env) -> Result<Vec<ShareDataKey>, Error>;
 
+    /// Gets the contract configuration.
+    /// 
+    /// ## Returns
+    /// 
+    /// * `ConfigDataKey` - The contract configuration
     fn get_config(env: Env) -> Result<ConfigDataKey, Error>;
 }
 
