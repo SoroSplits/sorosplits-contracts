@@ -22,7 +22,7 @@ fn happy_path() {
         },
     ];
 
-    splitter.init(&admin, &shares);
+    splitter.init(&admin, &shares, &true);
 
     assert_eq!(splitter.get_share(&shareholder_1), Some(8050));
     assert_eq!(splitter.get_share(&shareholder_2), Some(1950));
@@ -46,10 +46,10 @@ fn test_already_initialized() {
             share: 1950,
         },
     ];
-    splitter.init(&admin, &shares);
+    splitter.init(&admin, &shares, &true);
 
     assert_eq!(
-        splitter.try_init(&admin, &shares),
+        splitter.try_init(&admin, &shares, &true),
         Err(Ok(Error::AlreadyInitialized))
     );
 }
@@ -69,7 +69,7 @@ fn test_low_share_count() {
     ];
 
     assert_eq!(
-        splitter.try_init(&admin, &shares),
+        splitter.try_init(&admin, &shares, &true),
         Err(Ok(Error::LowShareCount))
     );
 }
@@ -94,7 +94,8 @@ fn test_invalid_share_total() {
                     shareholder: Address::random(&env),
                     share: 8050,
                 },
-            ]
+            ],
+            &true
         ),
         Err(Ok(Error::InvalidShareTotal))
     );
@@ -112,7 +113,8 @@ fn test_invalid_share_total() {
                     shareholder: Address::random(&env),
                     share: 50,
                 },
-            ]
+            ],
+            &true
         ),
         Err(Ok(Error::InvalidShareTotal))
     );

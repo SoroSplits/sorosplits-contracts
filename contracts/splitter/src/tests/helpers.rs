@@ -15,9 +15,10 @@ pub fn create_splitter_with_shares<'a>(
     e: &'a Env,
     admin: &Address,
     shares: &Vec<ShareDataKey>,
+    mutable: &bool,
 ) -> (SplitterClient<'a>, Address) {
     let (client, contract_id) = create_splitter(e);
-    client.init(admin, shares);
+    client.init(admin, shares, mutable);
     (client, contract_id)
 }
 
@@ -39,6 +40,7 @@ pub fn create_splitter_with_default_shares<'a>(
                 share: 1950,
             },
         ],
+        &true
     );
     (client, contract_id)
 }

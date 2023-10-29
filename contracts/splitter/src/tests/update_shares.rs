@@ -30,6 +30,7 @@ fn test_happy_path() {
                 share: 1950,
             },
         ],
+        &true
     );
 
     let shareholder_1 = Address::random(&env);

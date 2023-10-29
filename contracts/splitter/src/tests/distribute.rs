@@ -29,6 +29,7 @@ fn happy_path() {
                 share: 1950,
             },
         ],
+        &true
     );
 
     let token_admin = Address::random(&env);
