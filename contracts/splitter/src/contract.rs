@@ -22,7 +22,12 @@ pub trait SplitterTrait {
     /// * `admin` - The admin address for the contract
     /// * `shares` - The shareholders with their shares
     /// * `mutable` - Whether the contract is mutable or not
-    fn init(env: Env, admin: Address, shares: Vec<ShareDataKey>, mutable: bool) -> Result<(), Error>;
+    fn init(
+        env: Env,
+        admin: Address,
+        shares: Vec<ShareDataKey>,
+        mutable: bool,
+    ) -> Result<(), Error>;
 
     /// Distributes tokens to the shareholders.
     ///
@@ -81,7 +86,12 @@ pub struct Splitter;
 
 #[contractimpl]
 impl SplitterTrait for Splitter {
-    fn init(env: Env, admin: Address, shares: Vec<ShareDataKey>, mutable: bool) -> Result<(), Error> {
+    fn init(
+        env: Env,
+        admin: Address,
+        shares: Vec<ShareDataKey>,
+        mutable: bool,
+    ) -> Result<(), Error> {
         if ConfigDataKey::exists(&env) {
             return Err(Error::AlreadyInitialized);
         };

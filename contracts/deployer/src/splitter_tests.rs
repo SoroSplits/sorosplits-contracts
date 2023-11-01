@@ -7,15 +7,17 @@ use alloc::vec;
 use soroban_sdk::{
     symbol_short,
     testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation},
-    xdr::{self, ContractIdPreimage, ContractIdPreimageFromAddress, CreateContractArgs, Uint256, ScVal, ReadXdr},
-    Address, BytesN, Env, IntoVal, Val, Vec
+    xdr::{
+        self, ContractIdPreimage, ContractIdPreimageFromAddress, CreateContractArgs, ReadXdr,
+        ScVal, Uint256,
+    },
+    Address, BytesN, Env, IntoVal, Val, Vec,
 };
 
 // Splitter contract to be deployed
 mod contract {
     soroban_sdk::contractimport!(
-        file =
-            "../../target/wasm32-unknown-unknown/release/sorosplit_splitter.wasm"
+        file = "../../target/wasm32-unknown-unknown/release/sorosplit_splitter.wasm"
     );
 }
 
@@ -75,13 +77,19 @@ fn test_deploy_from_address() {
 
     // Invoke contract to check that it is initialized
     let client = contract::Client::new(&env, &contract_id);
-    
+
     let config = client.get_config();
     assert_eq!(config.admin, deployer);
     assert_eq!(config.mutable, false);
 
-    let shareholder1: Address = ScVal::from_xdr_base64("AAAAEgAAAAAAAAAA6Y+n4N7nCzpOgYbv/8Yy2bpAkV8TuT598X2JcQP7FjI=").unwrap().into_val(&env);
-    let shareholder2: Address = ScVal::from_xdr_base64("AAAAEgAAAAAAAAAAfNqRvTyoFTMCJ3LrSV1WtzDaNILzjamsvTOwQ0SQuMw=").unwrap().into_val(&env);
+    let shareholder1: Address =
+        ScVal::from_xdr_base64("AAAAEgAAAAAAAAAA6Y+n4N7nCzpOgYbv/8Yy2bpAkV8TuT598X2JcQP7FjI=")
+            .unwrap()
+            .into_val(&env);
+    let shareholder2: Address =
+        ScVal::from_xdr_base64("AAAAEgAAAAAAAAAAfNqRvTyoFTMCJ3LrSV1WtzDaNILzjamsvTOwQ0SQuMw=")
+            .unwrap()
+            .into_val(&env);
 
     let shares = client.list_shares();
     assert_eq!(shares.len(), 2);

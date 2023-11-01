@@ -40,7 +40,7 @@ pub fn create_splitter_with_default_shares<'a>(
                 share: 1950,
             },
         ],
-        &true
+        &true,
     );
     (client, contract_id)
 }
