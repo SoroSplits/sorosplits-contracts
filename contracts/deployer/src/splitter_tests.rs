@@ -8,8 +8,8 @@ use soroban_sdk::{
     symbol_short,
     testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation},
     xdr::{
-        self, ContractIdPreimage, ContractIdPreimageFromAddress, CreateContractArgs, ReadXdr,
-        ScVal, Uint256,
+        self, ContractIdPreimage, ContractIdPreimageFromAddress, CreateContractArgs, Limits,
+        ReadXdr, ScVal, Uint256,
     },
     Address, BytesN, Env, IntoVal, Val, Vec,
 };
@@ -17,7 +17,7 @@ use soroban_sdk::{
 // Splitter contract to be deployed
 mod contract {
     soroban_sdk::contractimport!(
-        file = "../../target/wasm32-unknown-unknown/release/sorosplit_splitter.wasm"
+        file = "../../target/wasm32-unknown-unknown/release/sorosplits_splitter.wasm"
     );
 }
 
@@ -31,15 +31,21 @@ fn test_deploy_from_address() {
     let wasm_hash = env.deployer().upload_contract_wasm(contract::WASM);
 
     // Define a deployer address that needs to authorize the deployment
-    let deployer = Address::random(&env);
+    let deployer = Address::generate(&env);
 
     // Deploy contract using deployer, and include an init function to call
     let salt = BytesN::from_array(&env, &[0; 32]);
     let init_fn = symbol_short!("init");
     let init_fn_args: Vec<Val> = (
         deployer.clone(),
-        ScVal::from_xdr_base64("AAAAEAAAAAEAAAACAAAAEQAAAAEAAAACAAAADwAAAAVzaGFyZQAAAAAAAAoAAAAAAAAAAAAAAAAAAAfQAAAADwAAAAtzaGFyZWhvbGRlcgAAAAASAAAAAAAAAADpj6fg3ucLOk6Bhu//xjLZukCRXxO5Pn3xfYlxA/sWMgAAABEAAAABAAAAAgAAAA8AAAAFc2hhcmUAAAAAAAAKAAAAAAAAAAAAAAAAAAAfQAAAAA8AAAALc2hhcmVob2xkZXIAAAAAEgAAAAAAAAAAfNqRvTyoFTMCJ3LrSV1WtzDaNILzjamsvTOwQ0SQuMw=").unwrap(),
-        ScVal::from_xdr_base64("AAAAAAAAAAA=").unwrap(),
+        ScVal::from_xdr_base64("AAAAEAAAAAEAAAACAAAAEQAAAAEAAAACAAAADwAAAAVzaGFyZQAAAAAAAAoAAAAAAAAAAAAAAAAAAAfQAAAADwAAAAtzaGFyZWhvbGRlcgAAAAASAAAAAAAAAADpj6fg3ucLOk6Bhu//xjLZukCRXxO5Pn3xfYlxA/sWMgAAABEAAAABAAAAAgAAAA8AAAAFc2hhcmUAAAAAAAAKAAAAAAAAAAAAAAAAAAAfQAAAAA8AAAALc2hhcmVob2xkZXIAAAAAEgAAAAAAAAAAfNqRvTyoFTMCJ3LrSV1WtzDaNILzjamsvTOwQ0SQuMw=", Limits {
+            depth: 100,
+            len: 1000
+        }).unwrap(),
+        ScVal::from_xdr_base64("AAAAAAAAAAA=", Limits {
+            depth: 100,
+            len: 1000
+        }).unwrap(),
     ).into_val(&env);
     env.mock_all_auths();
     let (contract_id, init_result) =
@@ -82,14 +88,24 @@ fn test_deploy_from_address() {
     assert_eq!(config.admin, deployer);
     assert_eq!(config.mutable, false);
 
-    let shareholder1: Address =
-        ScVal::from_xdr_base64("AAAAEgAAAAAAAAAA6Y+n4N7nCzpOgYbv/8Yy2bpAkV8TuT598X2JcQP7FjI=")
-            .unwrap()
-            .into_val(&env);
-    let shareholder2: Address =
-        ScVal::from_xdr_base64("AAAAEgAAAAAAAAAAfNqRvTyoFTMCJ3LrSV1WtzDaNILzjamsvTOwQ0SQuMw=")
-            .unwrap()
-            .into_val(&env);
+    let shareholder1: Address = ScVal::from_xdr_base64(
+        "AAAAEgAAAAAAAAAA6Y+n4N7nCzpOgYbv/8Yy2bpAkV8TuT598X2JcQP7FjI=",
+        Limits {
+            depth: 100,
+            len: 1000,
+        },
+    )
+    .unwrap()
+    .into_val(&env);
+    let shareholder2: Address = ScVal::from_xdr_base64(
+        "AAAAEgAAAAAAAAAAfNqRvTyoFTMCJ3LrSV1WtzDaNILzjamsvTOwQ0SQuMw=",
+        Limits {
+            depth: 100,
+            len: 1000,
+        },
+    )
+    .unwrap()
+    .into_val(&env);
 
     let shares = client.list_shares();
     assert_eq!(shares.len(), 2);

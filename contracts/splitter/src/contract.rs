@@ -1,4 +1,4 @@
-use fixed_point_math::FixedPoint;
+use soroban_fixed_point_math::FixedPoint;
 use soroban_sdk::{contract, contractimpl, contractmeta, token, Address, Env, Vec};
 
 use crate::{

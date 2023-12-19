@@ -13,7 +13,7 @@ const PERSISTENT_LIFETIME_THRESHOLD: u32 = PERSISTENT_BUMP_AMOUNT - DAY_IN_LEDGE
 fn bump_instance(e: &Env) {
     e.storage()
         .instance()
-        .bump(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
+        .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
 fn bump_persistent<K>(e: &Env, key: &K)
@@ -22,7 +22,7 @@ where
 {
     e.storage()
         .persistent()
-        .bump(key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
+        .extend_ttl(key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
 }
 
 #[derive(Clone, Debug, PartialEq)]

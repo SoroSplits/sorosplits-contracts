@@ -32,11 +32,11 @@ pub fn create_splitter_with_default_shares<'a>(
         &vec![
             &e,
             ShareDataKey {
-                shareholder: Address::random(&e),
+                shareholder: Address::generate(&e),
                 share: 8050,
             },
             ShareDataKey {
-                shareholder: Address::random(&e),
+                shareholder: Address::generate(&e),
                 share: 1950,
             },
         ],

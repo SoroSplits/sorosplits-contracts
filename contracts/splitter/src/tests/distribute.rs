@@ -11,9 +11,9 @@ fn happy_path() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let admin = Address::random(&env);
-    let shareholder_1 = Address::random(&env);
-    let shareholder_2 = Address::random(&env);
+    let admin = Address::generate(&env);
+    let shareholder_1 = Address::generate(&env);
+    let shareholder_2 = Address::generate(&env);
 
     let (splitter, splitter_address) = create_splitter_with_shares(
         &env,
@@ -32,7 +32,7 @@ fn happy_path() {
         &true,
     );
 
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let (token, sudo_token, token_address) = create_token(&env, &token_admin);
 
     sudo_token.mint(&splitter_address, &1_000_000_000);
@@ -49,7 +49,7 @@ fn test_not_initialized() {
     let (splitter, _) = create_splitter(&env);
 
     assert_eq!(
-        splitter.try_distribute_tokens(&Address::random(&env)),
+        splitter.try_distribute_tokens(&Address::generate(&env)),
         Err(Ok(Error::NotInitialized))
     );
 }
@@ -59,7 +59,7 @@ fn test_unauthorized() {
     let env = Env::default();
     let (splitter, _) = create_splitter(&env);
 
-    let token_admin = Address::random(&env);
+    let token_admin = Address::generate(&env);
     let (_, _, token_address) = create_token(&env, &token_admin);
 
     assert!(splitter.try_distribute_tokens(&token_address).is_err());
