@@ -13,9 +13,9 @@ fn test_happy_path() {
     let env: Env = Env::default();
     env.mock_all_auths();
 
-    let admin = Address::random(&env);
-    let old_shareholder_1 = Address::random(&env);
-    let old_shareholder_2 = Address::random(&env);
+    let admin = Address::generate(&env);
+    let old_shareholder_1 = Address::generate(&env);
+    let old_shareholder_2 = Address::generate(&env);
     let (splitter, _) = create_splitter_with_shares(
         &env,
         &admin,
@@ -33,9 +33,9 @@ fn test_happy_path() {
         &true,
     );
 
-    let shareholder_1 = Address::random(&env);
-    let shareholder_2 = Address::random(&env);
-    let shareholder_3 = Address::random(&env);
+    let shareholder_1 = Address::generate(&env);
+    let shareholder_2 = Address::generate(&env);
+    let shareholder_3 = Address::generate(&env);
     let new_shares = vec![
         &env,
         ShareDataKey {
@@ -78,7 +78,7 @@ fn test_not_initialized() {
 fn test_unauthorized() {
     let env = Env::default();
 
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     let (splitter, _) = create_splitter_with_default_shares(&env, &admin);
 
     assert!(splitter.try_update_shares(&vec![&env]).is_err());
@@ -88,14 +88,14 @@ fn test_unauthorized() {
 fn test_low_share_count() {
     let env: Env = Env::default();
     env.mock_all_auths();
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     let (splitter, _) = create_splitter_with_default_shares(&env, &admin);
 
     assert_eq!(
         splitter.try_update_shares(&vec![
             &env,
             ShareDataKey {
-                shareholder: Address::random(&env),
+                shareholder: Address::generate(&env),
                 share: 8050,
             },
         ]),
@@ -107,18 +107,18 @@ fn test_low_share_count() {
 fn test_invalid_share_total() {
     let env: Env = Env::default();
     env.mock_all_auths();
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     let (splitter, _) = create_splitter_with_default_shares(&env, &admin);
 
     assert_eq!(
         splitter.try_update_shares(&vec![
             &env,
             ShareDataKey {
-                shareholder: Address::random(&env),
+                shareholder: Address::generate(&env),
                 share: 8050,
             },
             ShareDataKey {
-                shareholder: Address::random(&env),
+                shareholder: Address::generate(&env),
                 share: 8050,
             },
         ]),
@@ -129,11 +129,11 @@ fn test_invalid_share_total() {
         splitter.try_update_shares(&vec![
             &env,
             ShareDataKey {
-                shareholder: Address::random(&env),
+                shareholder: Address::generate(&env),
                 share: 8050,
             },
             ShareDataKey {
-                shareholder: Address::random(&env),
+                shareholder: Address::generate(&env),
                 share: 50,
             },
         ]),

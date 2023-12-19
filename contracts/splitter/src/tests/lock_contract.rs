@@ -10,7 +10,7 @@ fn happy_path() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     let (splitter, _) = create_splitter_with_default_shares(&env, &admin);
 
     splitter.lock_contract();
@@ -30,7 +30,7 @@ fn test_not_initialized() {
 fn test_unauthorized() {
     let env = Env::default();
 
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     let (splitter, _) = create_splitter_with_default_shares(&env, &admin);
 
     assert!(splitter.try_lock_contract().is_err());

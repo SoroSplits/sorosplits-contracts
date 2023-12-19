@@ -7,9 +7,9 @@ fn happy_path() {
     let env: Env = Env::default();
     let (splitter, _) = create_splitter(&env);
 
-    let admin = Address::random(&env);
-    let shareholder_1 = Address::random(&env);
-    let shareholder_2 = Address::random(&env);
+    let admin = Address::generate(&env);
+    let shareholder_1 = Address::generate(&env);
+    let shareholder_2 = Address::generate(&env);
     let shares = vec![
         &env,
         ShareDataKey {
@@ -34,15 +34,15 @@ fn test_already_initialized() {
     let env: Env = Env::default();
     let (splitter, _) = create_splitter(&env);
 
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     let shares = vec![
         &env,
         ShareDataKey {
-            shareholder: Address::random(&env),
+            shareholder: Address::generate(&env),
             share: 8050,
         },
         ShareDataKey {
-            shareholder: Address::random(&env),
+            shareholder: Address::generate(&env),
             share: 1950,
         },
     ];
@@ -59,11 +59,11 @@ fn test_low_share_count() {
     let env: Env = Env::default();
     let (splitter, _) = create_splitter(&env);
 
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
     let shares = vec![
         &env,
         ShareDataKey {
-            shareholder: Address::random(&env),
+            shareholder: Address::generate(&env),
             share: 8050,
         },
     ];
@@ -79,7 +79,7 @@ fn test_invalid_share_total() {
     let env: Env = Env::default();
     let (splitter, _) = create_splitter(&env);
 
-    let admin = Address::random(&env);
+    let admin = Address::generate(&env);
 
     assert_eq!(
         splitter.try_init(
@@ -87,11 +87,11 @@ fn test_invalid_share_total() {
             &vec![
                 &env,
                 ShareDataKey {
-                    shareholder: Address::random(&env),
+                    shareholder: Address::generate(&env),
                     share: 8050,
                 },
                 ShareDataKey {
-                    shareholder: Address::random(&env),
+                    shareholder: Address::generate(&env),
                     share: 8050,
                 },
             ],
@@ -106,11 +106,11 @@ fn test_invalid_share_total() {
             &vec![
                 &env,
                 ShareDataKey {
-                    shareholder: Address::random(&env),
+                    shareholder: Address::generate(&env),
                     share: 8050,
                 },
                 ShareDataKey {
-                    shareholder: Address::random(&env),
+                    shareholder: Address::generate(&env),
                     share: 50,
                 },
             ],
