@@ -234,7 +234,7 @@ fn reset_shares(env: &Env) {
 
 /// Checks if the shares sum up to 10000
 fn check_shares(shares: &Vec<ShareDataKey>) -> Result<(), Error> {
-    if shares.len() == 1 {
+    if shares.len() < 2 {
         return Err(Error::LowShareCount);
     };
 
