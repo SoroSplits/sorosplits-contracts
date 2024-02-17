@@ -41,6 +41,11 @@ fn happy_path() {
 
     assert_eq!(token.balance(&shareholder_1), 805_000_000);
     assert_eq!(token.balance(&shareholder_2), 195_000_000);
+
+    let allocation_1 = splitter.get_allocation(&shareholder_1, &token_address);
+    assert_eq!(allocation_1, 805_000_000);
+    let allocation_2 = splitter.get_allocation(&shareholder_2, &token_address);
+    assert_eq!(allocation_2, 195_000_000);
 }
 
 #[test]

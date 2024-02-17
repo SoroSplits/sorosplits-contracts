@@ -29,6 +29,8 @@ pub trait SplitterTrait {
         mutable: bool,
     ) -> Result<(), Error>;
 
+    // ========== Execute Functions ==========
+
     /// Distributes tokens to the shareholders.
     ///
     /// Anyone can call this function.
@@ -55,6 +57,8 @@ pub trait SplitterTrait {
     /// Locking the contract does not affect the distribution of tokens.
     fn lock_contract(env: Env) -> Result<(), Error>;
 
+    // ========== Query Functions ==========
+
     /// Gets the share of a shareholder.
     ///
     /// ## Arguments
@@ -79,6 +83,18 @@ pub trait SplitterTrait {
     ///
     /// * `ConfigDataKey` - The contract configuration
     fn get_config(env: Env) -> Result<ConfigDataKey, Error>;
+
+    /// Gets the allocation of a shareholder for a token.
+    ///
+    /// ## Arguments
+    ///
+    /// * `shareholder` - The address of the shareholder
+    /// * `token` - The address of the token
+    ///
+    /// ## Returns
+    ///
+    /// * `i128` - The allocation of the shareholder for the token
+    fn get_allocation(env: Env, shareholder: Address, token: Address) -> Result<i128, Error>;
 }
 
 #[contract]
@@ -228,6 +244,13 @@ impl SplitterTrait for Splitter {
             return Err(Error::NotInitialized);
         };
         Ok(ConfigDataKey::get(&env).unwrap())
+    }
+
+    fn get_allocation(env: Env, shareholder: Address, token: Address) -> Result<i128, Error> {
+        if !ConfigDataKey::exists(&env) {
+            return Err(Error::NotInitialized);
+        };
+        Ok(AllocationDataKey::get_allocation(&env, &shareholder, &token).unwrap_or(0))
     }
 }
 
