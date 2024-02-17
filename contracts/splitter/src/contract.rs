@@ -1,5 +1,5 @@
 use soroban_fixed_point_math::FixedPoint;
-use soroban_sdk::{contract, contractimpl, contractmeta, token, Address, Env, Vec};
+use soroban_sdk::{contract, contractimpl, contractmeta, log, token, Address, Env, Vec};
 
 use crate::{
     errors::Error,
@@ -31,9 +31,27 @@ pub trait SplitterTrait {
 
     // ========== Execute Functions ==========
 
+    /// **ADMIN ONLY FUNCTION**
+    ///
+    /// Transfers unused tokens to the recipient.
+    ///
+    /// Unused tokens are defined as the tokens that are not distributed to the shareholders.
+    /// Meaning token balance - sum of all the allocations.
+    ///
+    /// ## Arguments
+    ///
+    /// * `token_address` - The address of the token to transfer
+    /// * `recipient` - The address of the recipient
+    /// * `amount` - The amount of tokens to transfer
+    fn transfer_tokens(
+        env: Env,
+        token_address: Address,
+        recipient: Address,
+        amount: i128,
+    ) -> Result<(), Error>;
+
     /// Distributes tokens to the shareholders.
     ///
-    /// Anyone can call this function.
     /// All of the available token balance is distributed on execution.
     ///
     /// ## Arguments
@@ -41,9 +59,10 @@ pub trait SplitterTrait {
     /// * `token_address` - The address of the token to distribute
     fn distribute_tokens(env: Env, token_address: Address) -> Result<(), Error>;
 
+    /// **ADMIN ONLY FUNCTION**
+    ///
     /// Updates the shares of the shareholders.
     ///
-    /// Can only be called by the admin.
     /// All of the shares and shareholders are updated on execution.
     ///
     /// ## Arguments
@@ -51,9 +70,10 @@ pub trait SplitterTrait {
     /// * `shares` - The updated shareholders with their shares
     fn update_shares(env: Env, shares: Vec<ShareDataKey>) -> Result<(), Error>;
 
+    /// **ADMIN ONLY FUNCTION**
+    ///
     /// Locks the contract for further shares updates.
     ///
-    /// Can only be called by the admin.
     /// Locking the contract does not affect the distribution of tokens.
     fn lock_contract(env: Env) -> Result<(), Error>;
 
@@ -124,6 +144,50 @@ impl SplitterTrait for Splitter {
         Ok(())
     }
 
+    fn transfer_tokens(
+        env: Env,
+        token_address: Address,
+        recipient: Address,
+        amount: i128,
+    ) -> Result<(), Error> {
+        if !ConfigDataKey::exists(&env) {
+            return Err(Error::NotInitialized);
+        };
+
+        // Make sure the caller is the admin
+        ConfigDataKey::require_admin(&env)?;
+
+        let token = token::Client::new(&env, &token_address);
+
+        // Get the available token balance
+        let balance = token.balance(&env.current_contract_address());
+
+        // Get the total allocation for the token
+        let total_allocation =
+            AllocationDataKey::get_total_allocation(&env, &token_address).unwrap_or(0);
+
+        // Calculate the unused balance that can be transferred
+        let unused_balance = balance - total_allocation;
+
+        // Transfer amount cannot be equal and less than 0
+        if amount <= 0 {
+            return Err(Error::ZeroTransferAmount);
+        };
+        // Transfer amount cannot be greater than the balance
+        if amount > balance {
+            return Err(Error::TransferAmountAboveBalance);
+        };
+        // Transfer amount cannot be greater than the unused balance
+        if amount > unused_balance {
+            return Err(Error::TransferAmountAboveUnusedBalance);
+        };
+
+        // Transfer the tokens to the recipient
+        token.transfer(&env.current_contract_address(), &recipient, &amount);
+
+        Ok(())
+    }
+
     fn distribute_tokens(env: Env, token_address: Address) -> Result<(), Error> {
         if !ConfigDataKey::exists(&env) {
             return Err(Error::NotInitialized);
@@ -147,32 +211,18 @@ impl SplitterTrait for Splitter {
                 let amount = balance.fixed_mul_floor(share, 10000).unwrap_or(0);
 
                 if amount > 0 {
+                    // Get the current allocation for the user - default to 0
                     let allocation =
-                        AllocationDataKey::get_allocation(&env, &shareholder, &token_address);
+                        AllocationDataKey::get_allocation(&env, &shareholder, &token_address)
+                            .unwrap_or(0);
 
-                    match allocation {
-                        Some(allocation) => {
-                            // Update the allocation with the new amount
-                            AllocationDataKey::save_allocation(
-                                &env,
-                                &shareholder,
-                                &token_address,
-                                allocation + amount,
-                            );
-                        }
-                        None => {
-                            // Save the allocation for the shareholder
-                            AllocationDataKey::save_allocation(
-                                &env,
-                                &shareholder,
-                                &token_address,
-                                amount,
-                            )
-                        }
-                    }
-
-                    // Transfer the tokens to the shareholder
-                    token.transfer(&env.current_contract_address(), &shareholder, &amount);
+                    // Update the allocation with the new amount
+                    AllocationDataKey::save_allocation(
+                        &env,
+                        &shareholder,
+                        &token_address,
+                        allocation + amount,
+                    );
                 }
             };
         }
