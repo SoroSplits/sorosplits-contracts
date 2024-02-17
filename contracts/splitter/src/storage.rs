@@ -152,10 +152,50 @@ impl ConfigDataKey {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct AllocationDataKey {}
+impl AllocationDataKey {
+    /// Initializes the share for the shareholder
+    pub fn save_allocation(e: &Env, shareholder: Address, token: Address, allocation: i128) {
+        let key = DataKey::Allocation(shareholder, token);
+        e.storage().persistent().set(&key, &allocation);
+        bump_persistent(e, &key);
+    }
+
+    pub fn remove_allocation(e: &Env, shareholder: Address, token: Address) {
+        let key = DataKey::Allocation(shareholder, token);
+        e.storage().persistent().remove(&key);
+    }
+
+    pub fn get_allocation(e: &Env, shareholder: Address, token: Address) -> Option<i128> {
+        let key = DataKey::Allocation(shareholder, token);
+        let res = e.storage().persistent().get(&key);
+        match res {
+            Some(allocation) => {
+                bump_persistent(e, &key);
+                Some(allocation)
+            }
+            None => None,
+        }
+    }
+}
+
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
     Config,
+    // Storage keys for the shareholder and share data
+    //
+    /// Data key for keeping all of the shareholders in the contract
     Shareholders,
+    /// Data key for keeping the share of a shareholder.
+    /// User addresses are mapped to their shares
     Share(Address),
+    // Storage keys for the allocations
+    //
+    /// Data key for keeping the allocation amount for a shareholder.
+    /// User addresses with token addresses are mapped to their allocation amount.
+    ///
+    /// (UserAddr, TokenAddr) -> Allocation
+    Allocation(Address, Address),
 }
