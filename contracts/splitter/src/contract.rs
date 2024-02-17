@@ -1,9 +1,9 @@
-use soroban_fixed_point_math::FixedPoint;
-use soroban_sdk::{contract, contractimpl, contractmeta, token, Address, Env, Vec};
+use soroban_sdk::{contract, contractimpl, contractmeta, Address, Env, Vec};
 
 use crate::{
     errors::Error,
-    storage::{AllocationDataKey, ConfigDataKey, ShareDataKey},
+    execute, query,
+    storage::{ConfigDataKey, ShareDataKey},
 };
 
 contractmeta!(
@@ -138,26 +138,15 @@ pub struct Splitter;
 
 #[contractimpl]
 impl SplitterTrait for Splitter {
+    // ========== Execute Functions ==========
+
     fn init(
         env: Env,
         admin: Address,
         shares: Vec<ShareDataKey>,
         mutable: bool,
     ) -> Result<(), Error> {
-        if ConfigDataKey::exists(&env) {
-            return Err(Error::AlreadyInitialized);
-        };
-
-        // Initialize the contract configuration
-        ConfigDataKey::init(&env, admin, mutable);
-
-        // Check if the shares sum up to 10000
-        check_shares(&shares)?;
-
-        // Update the shares of the shareholders
-        update_shares(&env, &shares);
-
-        Ok(())
+        execute::init(env, admin, shares, mutable)
     }
 
     fn transfer_tokens(
@@ -166,118 +155,19 @@ impl SplitterTrait for Splitter {
         recipient: Address,
         amount: i128,
     ) -> Result<(), Error> {
-        if !ConfigDataKey::exists(&env) {
-            return Err(Error::NotInitialized);
-        };
-
-        // Make sure the caller is the admin
-        ConfigDataKey::require_admin(&env)?;
-
-        let token = token::Client::new(&env, &token_address);
-
-        // Get the available token balance
-        let balance = token.balance(&env.current_contract_address());
-
-        // Get the total allocation for the token
-        let total_allocation =
-            AllocationDataKey::get_total_allocation(&env, &token_address).unwrap_or(0);
-
-        // Calculate the unused balance that can be transferred
-        let unused_balance = balance - total_allocation;
-
-        // Transfer amount cannot be equal and less than 0
-        if amount <= 0 {
-            return Err(Error::ZeroTransferAmount);
-        };
-        // Transfer amount cannot be greater than the balance
-        if amount > balance {
-            return Err(Error::TransferAmountAboveBalance);
-        };
-        // Transfer amount cannot be greater than the unused balance
-        if amount > unused_balance {
-            return Err(Error::TransferAmountAboveUnusedBalance);
-        };
-
-        // Transfer the tokens to the recipient
-        token.transfer(&env.current_contract_address(), &recipient, &amount);
-
-        Ok(())
+        execute::transfer_tokens(env, token_address, recipient, amount)
     }
 
     fn distribute_tokens(env: Env, token_address: Address) -> Result<(), Error> {
-        if !ConfigDataKey::exists(&env) {
-            return Err(Error::NotInitialized);
-        };
-
-        // Make sure the caller is the admin
-        ConfigDataKey::require_admin(&env)?;
-
-        let token = token::Client::new(&env, &token_address);
-
-        // Get the available token balance
-        let balance = token.balance(&env.current_contract_address());
-
-        // Get the shareholders vector
-        let shareholders = ShareDataKey::get_shareholders(&env);
-
-        // For each shareholder, calculate the amount of tokens to distribute
-        for shareholder in shareholders.iter() {
-            if let Some(ShareDataKey { share, .. }) = ShareDataKey::get_share(&env, &shareholder) {
-                // Calculate the amount of tokens to distribute
-                let amount = balance.fixed_mul_floor(share, 10000).unwrap_or(0);
-
-                if amount > 0 {
-                    // Get the current allocation for the user - default to 0
-                    let allocation =
-                        AllocationDataKey::get_allocation(&env, &shareholder, &token_address)
-                            .unwrap_or(0);
-
-                    // Update the allocation with the new amount
-                    AllocationDataKey::save_allocation(
-                        &env,
-                        &shareholder,
-                        &token_address,
-                        allocation + amount,
-                    );
-                }
-            };
-        }
-
-        Ok(())
+        execute::distribute_tokens(env, token_address)
     }
 
     fn update_shares(env: Env, shares: Vec<ShareDataKey>) -> Result<(), Error> {
-        if !ConfigDataKey::exists(&env) {
-            return Err(Error::NotInitialized);
-        };
-
-        // Make sure the caller is the admin
-        ConfigDataKey::require_admin(&env)?;
-
-        // Check if the shares sum up to 10000
-        check_shares(&shares)?;
-
-        // Remove all of the shareholders and their shares
-        reset_shares(&env);
-
-        // Update the shares of the shareholders
-        update_shares(&env, &shares);
-
-        Ok(())
+        execute::update_shares(env, shares)
     }
 
     fn lock_contract(env: Env) -> Result<(), Error> {
-        if !ConfigDataKey::exists(&env) {
-            return Err(Error::NotInitialized);
-        };
-
-        // Make sure the caller is the admin
-        ConfigDataKey::require_admin(&env)?;
-
-        // Update the contract configuration
-        ConfigDataKey::lock_contract(&env);
-
-        Ok(())
+        execute::lock_contract(env)
     }
 
     fn withdraw_allocation(
@@ -286,121 +176,24 @@ impl SplitterTrait for Splitter {
         shareholder: Address,
         amount: i128,
     ) -> Result<(), Error> {
-        if !ConfigDataKey::exists(&env) {
-            return Err(Error::NotInitialized);
-        };
-
-        // Make sure the caller is the shareholder
-        shareholder.require_auth();
-
-        let token = token::Client::new(&env, &token_address);
-
-        // Get the current allocation for the user - default to 0
-        let allocation =
-            AllocationDataKey::get_allocation(&env, &shareholder, &token_address).unwrap_or(0);
-
-        // Withdraw amount cannot be equal and less than 0
-        if amount == 0 {
-            return Err(Error::ZeroWithdrawalAmount);
-        };
-        // Withdraw amount cannot be greater than the allocation
-        if amount > allocation {
-            return Err(Error::WithdrawalAmountAboveAllocation);
-        };
-
-        if amount == allocation {
-            AllocationDataKey::remove_allocation(&env, &shareholder, &token_address);
-        } else {
-            AllocationDataKey::save_allocation(
-                &env,
-                &shareholder,
-                &token_address,
-                allocation - amount,
-            );
-        }
-
-        // Transfer the tokens to the shareholder
-        token.transfer(&env.current_contract_address(), &shareholder, &amount);
-
-        Ok(())
+        execute::withdraw_allocation(env, token_address, shareholder, amount)
     }
 
+    // ========== Query Functions ==========
+
     fn get_share(env: Env, shareholder: Address) -> Result<Option<i128>, Error> {
-        if !ConfigDataKey::exists(&env) {
-            return Err(Error::NotInitialized);
-        };
-        match ShareDataKey::get_share(&env, &shareholder) {
-            Some(share) => Ok(Some(share.share)),
-            None => Ok(None),
-        }
+        query::get_share(env, shareholder)
     }
 
     fn list_shares(env: Env) -> Result<Vec<ShareDataKey>, Error> {
-        if !ConfigDataKey::exists(&env) {
-            return Err(Error::NotInitialized);
-        };
-
-        let mut shares: Vec<ShareDataKey> = Vec::new(&env);
-
-        for shareholder in ShareDataKey::get_shareholders(&env).iter() {
-            let share = ShareDataKey::get_share(&env, &shareholder).unwrap();
-            shares.push_back(share);
-        }
-
-        Ok(shares)
+        query::list_shares(env)
     }
 
     fn get_config(env: Env) -> Result<ConfigDataKey, Error> {
-        if !ConfigDataKey::exists(&env) {
-            return Err(Error::NotInitialized);
-        };
-        Ok(ConfigDataKey::get(&env).unwrap())
+        query::get_config(env)
     }
 
     fn get_allocation(env: Env, shareholder: Address, token: Address) -> Result<i128, Error> {
-        if !ConfigDataKey::exists(&env) {
-            return Err(Error::NotInitialized);
-        };
-        Ok(AllocationDataKey::get_allocation(&env, &shareholder, &token).unwrap_or(0))
+        query::get_allocation(env, shareholder, token)
     }
-}
-
-/// Updates the shares of the shareholders
-fn update_shares(env: &Env, shares: &Vec<ShareDataKey>) {
-    // Shareholders are stored in a vector
-    let mut shareholders: Vec<Address> = Vec::new(&env);
-
-    for share in shares.iter() {
-        // Add the shareholder to the vector
-        shareholders.push_back(share.shareholder.clone());
-
-        // Store the share for each shareholder
-        ShareDataKey::save_share(&env, share.shareholder, share.share);
-    }
-
-    // Store the shareholders vector
-    ShareDataKey::save_shareholders(&env, shareholders);
-}
-
-/// Removes all of the shareholders and their shares
-fn reset_shares(env: &Env) {
-    for shareholder in ShareDataKey::get_shareholders(env).iter() {
-        ShareDataKey::remove_share(env, &shareholder);
-    }
-    ShareDataKey::remove_shareholders(env);
-}
-
-/// Checks if the shares sum up to 10000
-fn check_shares(shares: &Vec<ShareDataKey>) -> Result<(), Error> {
-    if shares.len() < 2 {
-        return Err(Error::LowShareCount);
-    };
-
-    let total = shares.iter().fold(0, |acc, share| acc + share.share);
-
-    if total != 10000 {
-        return Err(Error::InvalidShareTotal);
-    };
-
-    Ok(())
 }
