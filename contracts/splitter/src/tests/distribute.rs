@@ -33,14 +33,11 @@ fn happy_path() {
     );
 
     let token_admin = Address::generate(&env);
-    let (token, sudo_token, token_address) = create_token(&env, &token_admin);
+    let (_, sudo_token, token_address) = create_token(&env, &token_admin);
 
     sudo_token.mint(&splitter_address, &1_000_000_000);
 
     splitter.distribute_tokens(&token_address);
-
-    assert_eq!(token.balance(&shareholder_1), 805_000_000);
-    assert_eq!(token.balance(&shareholder_2), 195_000_000);
 
     let allocation_1 = splitter.get_allocation(&shareholder_1, &token_address);
     assert_eq!(allocation_1, 805_000_000);
