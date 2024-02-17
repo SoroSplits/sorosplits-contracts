@@ -69,6 +69,10 @@ fn test_zero_transfer_amount() {
         splitter.try_transfer_tokens(&token_address, &Address::generate(&env), &0),
         Err(Ok(Error::ZeroTransferAmount))
     );
+    assert_eq!(
+        splitter.try_transfer_tokens(&token_address, &Address::generate(&env), &-1),
+        Err(Ok(Error::ZeroTransferAmount))
+    );
 }
 
 #[test]

@@ -159,10 +159,6 @@ impl AllocationDataKey {
 
     /// Initializes the share for the shareholder
     pub fn save_allocation(e: &Env, shareholder: &Address, token: &Address, allocation: i128) {
-        let key = DataKey::Allocation(shareholder.clone(), token.clone());
-        e.storage().persistent().set(&key, &allocation);
-        bump_persistent(e, &key);
-
         match Self::get_total_allocation(e, token) {
             Some(total_allocation) => {
                 let new_total_allocation = total_allocation + allocation;
@@ -172,12 +168,13 @@ impl AllocationDataKey {
                 Self::save_total_allocation(e, token, allocation);
             }
         }
+
+        let key = DataKey::Allocation(shareholder.clone(), token.clone());
+        e.storage().persistent().set(&key, &allocation);
+        bump_persistent(e, &key);
     }
 
     pub fn remove_allocation(e: &Env, shareholder: &Address, token: &Address) {
-        let key = DataKey::Allocation(shareholder.clone(), token.clone());
-        e.storage().persistent().remove(&key);
-
         match Self::get_total_allocation(e, token) {
             Some(total_allocation) => {
                 let allocation = Self::get_allocation(e, shareholder, token).unwrap();
@@ -186,6 +183,9 @@ impl AllocationDataKey {
             }
             None => (),
         }
+
+        let key = DataKey::Allocation(shareholder.clone(), token.clone());
+        e.storage().persistent().remove(&key);
     }
 
     pub fn get_allocation(e: &Env, shareholder: &Address, token: &Address) -> Option<i128> {

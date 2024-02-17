@@ -1,5 +1,5 @@
 use soroban_fixed_point_math::FixedPoint;
-use soroban_sdk::{contract, contractimpl, contractmeta, log, token, Address, Env, Vec};
+use soroban_sdk::{contract, contractimpl, contractmeta, token, Address, Env, Vec};
 
 use crate::{
     errors::Error,
@@ -76,6 +76,22 @@ pub trait SplitterTrait {
     ///
     /// Locking the contract does not affect the distribution of tokens.
     fn lock_contract(env: Env) -> Result<(), Error>;
+
+    /// Withdraws the allocation of the shareholder for the token.
+    ///
+    /// A shareholder can withdraw their allocation for a token if they have any.
+    ///
+    /// ## Arguments
+    ///
+    /// * `token_address` - The address of the token to withdraw
+    /// * `shareholder` - The address of the shareholder
+    /// * `amount` - The amount of tokens to withdraw
+    fn withdraw_allocation(
+        env: Env,
+        token_address: Address,
+        shareholder: Address,
+        amount: i128,
+    ) -> Result<(), Error>;
 
     // ========== Query Functions ==========
 
@@ -260,6 +276,51 @@ impl SplitterTrait for Splitter {
 
         // Update the contract configuration
         ConfigDataKey::lock_contract(&env);
+
+        Ok(())
+    }
+
+    fn withdraw_allocation(
+        env: Env,
+        token_address: Address,
+        shareholder: Address,
+        amount: i128,
+    ) -> Result<(), Error> {
+        if !ConfigDataKey::exists(&env) {
+            return Err(Error::NotInitialized);
+        };
+
+        // Make sure the caller is the shareholder
+        shareholder.require_auth();
+
+        let token = token::Client::new(&env, &token_address);
+
+        // Get the current allocation for the user - default to 0
+        let allocation =
+            AllocationDataKey::get_allocation(&env, &shareholder, &token_address).unwrap_or(0);
+
+        // Withdraw amount cannot be equal and less than 0
+        if amount == 0 {
+            return Err(Error::ZeroWithdrawalAmount);
+        };
+        // Withdraw amount cannot be greater than the allocation
+        if amount > allocation {
+            return Err(Error::WithdrawalAmountAboveAllocation);
+        };
+
+        if amount == allocation {
+            AllocationDataKey::remove_allocation(&env, &shareholder, &token_address);
+        } else {
+            AllocationDataKey::save_allocation(
+                &env,
+                &shareholder,
+                &token_address,
+                allocation - amount,
+            );
+        }
+
+        // Transfer the tokens to the shareholder
+        token.transfer(&env.current_contract_address(), &shareholder, &amount);
 
         Ok(())
     }
