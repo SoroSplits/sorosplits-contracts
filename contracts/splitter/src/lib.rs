@@ -2,12 +2,8 @@
 
 mod contract;
 mod errors;
+mod logic;
 mod storage;
-
-mod execute;
-mod query;
-
-mod helpers;
 
 #[cfg(test)]
 mod tests;

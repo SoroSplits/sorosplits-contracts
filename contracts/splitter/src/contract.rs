@@ -2,7 +2,8 @@ use soroban_sdk::{contract, contractimpl, contractmeta, Address, Env, Vec};
 
 use crate::{
     errors::Error,
-    execute, query,
+    logic::execute,
+    logic::query,
     storage::{ConfigDataKey, ShareDataKey},
 };
 

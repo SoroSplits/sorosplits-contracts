@@ -179,7 +179,12 @@ impl AllocationDataKey {
             Some(total_allocation) => {
                 let allocation = Self::get_allocation(e, shareholder, token).unwrap();
                 let new_total_allocation = total_allocation - allocation;
-                Self::save_total_allocation(e, token, new_total_allocation);
+
+                if new_total_allocation == 0 {
+                    Self::remove_total_allocation(e, token);
+                } else {
+                    Self::save_total_allocation(e, token, new_total_allocation);
+                }
             }
             None => (),
         }

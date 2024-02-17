@@ -2,7 +2,7 @@ use soroban_sdk::{Address, Env, Vec};
 
 use crate::{
     errors::Error,
-    helpers::{check_shares, update_shares},
+    logic::helpers::{check_shares, update_shares},
     storage::{ConfigDataKey, ShareDataKey},
 };
 
