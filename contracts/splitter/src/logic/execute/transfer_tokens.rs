@@ -1,7 +1,8 @@
-use soroban_sdk::{token, Address, Env};
+use soroban_sdk::{Address, Env};
 
 use crate::{
     errors::Error,
+    logic::helpers::get_token_client,
     storage::{AllocationDataKey, ConfigDataKey},
 };
 
@@ -18,10 +19,10 @@ pub fn execute(
     // Make sure the caller is the admin
     ConfigDataKey::require_admin(&env)?;
 
-    let token = token::Client::new(&env, &token_address);
+    let token_client = get_token_client(&env, &token_address);
 
     // Get the available token balance
-    let balance = token.balance(&env.current_contract_address());
+    let balance = token_client.balance(&env.current_contract_address());
 
     // Get the total allocation for the token
     let total_allocation =
@@ -44,7 +45,7 @@ pub fn execute(
     };
 
     // Transfer the tokens to the recipient
-    token.transfer(&env.current_contract_address(), &recipient, &amount);
+    token_client.transfer(&env.current_contract_address(), &recipient, &amount);
 
     Ok(())
 }

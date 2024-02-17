@@ -1,7 +1,8 @@
-use soroban_sdk::{token, Address, Env};
+use soroban_sdk::{Address, Env};
 
 use crate::{
     errors::Error,
+    logic::helpers::get_token_client,
     storage::{AllocationDataKey, ConfigDataKey},
 };
 
@@ -18,7 +19,7 @@ pub fn execute(
     // Make sure the caller is the shareholder
     shareholder.require_auth();
 
-    let token = token::Client::new(&env, &token_address);
+    let token_client = get_token_client(&env, &token_address);
 
     // Get the current allocation for the user - default to 0
     let allocation =
@@ -40,7 +41,7 @@ pub fn execute(
     }
 
     // Transfer the tokens to the shareholder
-    token.transfer(&env.current_contract_address(), &shareholder, &amount);
+    token_client.transfer(&env.current_contract_address(), &shareholder, &amount);
 
     Ok(())
 }
