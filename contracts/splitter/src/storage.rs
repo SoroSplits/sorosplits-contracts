@@ -152,10 +152,104 @@ impl ConfigDataKey {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct AllocationDataKey {}
+impl AllocationDataKey {
+    // ========== User Allocation ==========
+
+    /// Initializes the share for the shareholder
+    pub fn save_allocation(e: &Env, shareholder: &Address, token: &Address, allocation: i128) {
+        match Self::get_total_allocation(e, token) {
+            Some(total_allocation) => {
+                let new_total_allocation = total_allocation + allocation;
+                Self::save_total_allocation(e, token, new_total_allocation);
+            }
+            None => {
+                Self::save_total_allocation(e, token, allocation);
+            }
+        }
+
+        let key = DataKey::Allocation(shareholder.clone(), token.clone());
+        e.storage().persistent().set(&key, &allocation);
+        bump_persistent(e, &key);
+    }
+
+    pub fn remove_allocation(e: &Env, shareholder: &Address, token: &Address) {
+        match Self::get_total_allocation(e, token) {
+            Some(total_allocation) => {
+                let allocation = Self::get_allocation(e, shareholder, token).unwrap();
+                let new_total_allocation = total_allocation - allocation;
+
+                if new_total_allocation == 0 {
+                    Self::remove_total_allocation(e, token);
+                } else {
+                    Self::save_total_allocation(e, token, new_total_allocation);
+                }
+            }
+            None => (),
+        }
+
+        let key = DataKey::Allocation(shareholder.clone(), token.clone());
+        e.storage().persistent().remove(&key);
+    }
+
+    pub fn get_allocation(e: &Env, shareholder: &Address, token: &Address) -> Option<i128> {
+        let key = DataKey::Allocation(shareholder.clone(), token.clone());
+        let res = e.storage().persistent().get(&key);
+        match res {
+            Some(allocation) => {
+                bump_persistent(e, &key);
+                Some(allocation)
+            }
+            None => None,
+        }
+    }
+
+    // ========== Total Allocation ==========
+
+    pub fn save_total_allocation(e: &Env, token: &Address, total_allocation: i128) {
+        let key = DataKey::TotalAllocation(token.clone());
+        e.storage().persistent().set(&key, &total_allocation);
+        bump_persistent(e, &key);
+    }
+
+    pub fn remove_total_allocation(e: &Env, token: &Address) {
+        let key = DataKey::TotalAllocation(token.clone());
+        e.storage().persistent().remove(&key);
+    }
+
+    pub fn get_total_allocation(e: &Env, token: &Address) -> Option<i128> {
+        let key = DataKey::TotalAllocation(token.clone());
+        let res = e.storage().persistent().get(&key);
+        match res {
+            Some(total_allocation) => {
+                bump_persistent(e, &key);
+                Some(total_allocation)
+            }
+            None => None,
+        }
+    }
+}
+
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
     Config,
+    // Storage keys for the shareholder and share data
+    //
+    /// Data key for keeping all of the shareholders in the contract
     Shareholders,
+    /// Data key for keeping the share of a shareholder.
+    /// User addresses are mapped to their shares
     Share(Address),
+    // Storage keys for the allocations
+    //
+    /// Data key for keeping the total allocation amount for a token.
+    /// Token addresses are mapped to their total allocation amount.
+    TotalAllocation(Address),
+    /// Data key for keeping the allocation amount for a shareholder.
+    /// User addresses with token addresses are mapped to their allocation amount.
+    ///
+    /// (UserAddr, TokenAddr) -> Allocation
+    Allocation(Address, Address),
 }

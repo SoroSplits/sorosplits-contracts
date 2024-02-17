@@ -2,6 +2,7 @@
 
 mod contract;
 mod errors;
+mod logic;
 mod storage;
 
 #[cfg(test)]

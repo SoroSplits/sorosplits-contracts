@@ -56,3 +56,17 @@ pub fn create_token<'a>(
         contract_id,
     )
 }
+
+pub fn get_default_share_data(env: &Env) -> Vec<ShareDataKey> {
+    vec![
+        env,
+        ShareDataKey {
+            shareholder: Address::generate(env),
+            share: 8050,
+        },
+        ShareDataKey {
+            shareholder: Address::generate(env),
+            share: 1950,
+        },
+    ]
+}
