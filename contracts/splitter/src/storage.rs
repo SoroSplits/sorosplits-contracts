@@ -156,19 +156,19 @@ impl ConfigDataKey {
 pub struct AllocationDataKey {}
 impl AllocationDataKey {
     /// Initializes the share for the shareholder
-    pub fn save_allocation(e: &Env, shareholder: Address, token: Address, allocation: i128) {
-        let key = DataKey::Allocation(shareholder, token);
+    pub fn save_allocation(e: &Env, shareholder: &Address, token: &Address, allocation: i128) {
+        let key = DataKey::Allocation(shareholder.clone(), token.clone());
         e.storage().persistent().set(&key, &allocation);
         bump_persistent(e, &key);
     }
 
-    pub fn remove_allocation(e: &Env, shareholder: Address, token: Address) {
-        let key = DataKey::Allocation(shareholder, token);
+    pub fn remove_allocation(e: &Env, shareholder: &Address, token: &Address) {
+        let key = DataKey::Allocation(shareholder.clone(), token.clone());
         e.storage().persistent().remove(&key);
     }
 
-    pub fn get_allocation(e: &Env, shareholder: Address, token: Address) -> Option<i128> {
-        let key = DataKey::Allocation(shareholder, token);
+    pub fn get_allocation(e: &Env, shareholder: &Address, token: &Address) -> Option<i128> {
+        let key = DataKey::Allocation(shareholder.clone(), token.clone());
         let res = e.storage().persistent().get(&key);
         match res {
             Some(allocation) => {

@@ -3,7 +3,7 @@ use soroban_sdk::{contract, contractimpl, contractmeta, token, Address, Env, Vec
 
 use crate::{
     errors::Error,
-    storage::{ConfigDataKey, ShareDataKey},
+    storage::{AllocationDataKey, ConfigDataKey, ShareDataKey},
 };
 
 contractmeta!(
@@ -131,6 +131,30 @@ impl SplitterTrait for Splitter {
                 let amount = balance.fixed_mul_floor(share, 10000).unwrap_or(0);
 
                 if amount > 0 {
+                    let allocation =
+                        AllocationDataKey::get_allocation(&env, &shareholder, &token_address);
+
+                    match allocation {
+                        Some(allocation) => {
+                            // Update the allocation with the new amount
+                            AllocationDataKey::save_allocation(
+                                &env,
+                                &shareholder,
+                                &token_address,
+                                allocation + amount,
+                            );
+                        }
+                        None => {
+                            // Save the allocation for the shareholder
+                            AllocationDataKey::save_allocation(
+                                &env,
+                                &shareholder,
+                                &token_address,
+                                amount,
+                            )
+                        }
+                    }
+
                     // Transfer the tokens to the shareholder
                     token.transfer(&env.current_contract_address(), &shareholder, &amount);
                 }
